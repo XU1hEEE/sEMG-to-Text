@@ -1,0 +1,32 @@
+# @package _global_
+
+select_channels:
+  _target_: emg2qwerty.transforms.SelectChannels
+  num_channels: 2
+
+transforms:
+  train:
+    - ${to_tensor}
+    - ${select_channels}
+    - ${band_rotation}
+    - ${temporal_jitter}
+    - ${logspec}
+    - ${specaug}
+  val:
+    - ${to_tensor}
+    - ${select_channels}
+    - ${logspec}
+  test: ${transforms.val}
+
+module:
+  _target_: emg2qwerty.lightning.TDSConvCTCModule
+  in_features: 66
+  mlp_features: [384]
+  block_channels: [24, 24, 24, 24]
+  kernel_width: 32
+  electrode_channels: 2
+
+datamodule:
+  _target_: emg2qwerty.lightning.WindowedEMGDataModule
+  window_length: 8000
+  padding: [1800, 200]
