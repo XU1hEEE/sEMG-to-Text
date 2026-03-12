@@ -4,11 +4,11 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import math
 from collections.abc import Sequence
 
 import torch
 from torch import nn
-import math
 
 
 class SpectrogramNorm(nn.Module):
@@ -280,44 +280,55 @@ class TDSConvEncoder(nn.Module):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         return self.tds_conv_blocks(inputs)  # (T, N, num_features)
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=200000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model)
+        )
         pe = torch.zeros(max_len, 1, d_model)
         pe[:, 0, 0::2] = torch.sin(position * div_term)
         pe[:, 0, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
         # x shape: (Sequence Length, Batch Size, d_model)
-        x = x + self.pe[:x.size(0)]
+        x = x + self.pe[: x.size(0)]
         return self.dropout(x)
 
 
 class EMGTransformer(nn.Module):
-    def __init__(self, num_classes, in_features=1056, d_model=128, nhead=4, num_layers=3, dropout=0.1):
+    def __init__(
+        self,
+        num_classes,
+        in_features=1056,
+        d_model=128,
+        nhead=4,
+        num_layers=3,
+        dropout=0.1,
+    ):
         super(EMGTransformer, self).__init__()
-        
+
         # 1. Linear Projection to map in_features to d_model
         self.input_proj = nn.Linear(in_features, d_model)
-        
+
         # 2. Positional Encoding
         self.pos_encoder = PositionalEncoding(d_model, dropout)
-        
+
         # 3. Transformer Encoder
         encoder_layers = nn.TransformerEncoderLayer(
-            d_model=d_model, 
-            nhead=nhead, 
-            dim_feedforward=d_model * 4, 
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=d_model * 4,
             dropout=dropout,
-            batch_first=False # We keep (T, N, Features) for CTC
+            batch_first=False,  # We keep (T, N, Features) for CTC
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
-        
+
         # 4. Classification Head
         self.classifier = nn.Linear(d_model, num_classes)
 

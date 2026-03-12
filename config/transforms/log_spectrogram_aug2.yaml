@@ -38,8 +38,8 @@ specaug:
 transforms:
   train:
     - ${to_tensor}
-    - ${add_gaussian_noise}   
-    - ${sync_time_masking}    
+    - ${add_gaussian_noise}
+    - ${sync_time_masking}
     - ${band_rotation}
     - ${temporal_jitter}
     - ${logspec}

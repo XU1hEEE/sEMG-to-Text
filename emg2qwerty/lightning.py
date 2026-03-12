@@ -22,10 +22,10 @@ from emg2qwerty.charset import charset
 from emg2qwerty.data import LabelData, WindowedEMGDataset
 from emg2qwerty.metrics import CharacterErrorRates
 from emg2qwerty.modules import (
+    EMGTransformer,
     MultiBandRotationInvariantMLP,
     SpectrogramNorm,
     TDSConvEncoder,
-    EMGTransformer,
 )
 from emg2qwerty.transforms import Transform
 
@@ -271,6 +271,7 @@ class TDSConvCTCModule(pl.LightningModule):
             lr_scheduler_config=self.hparams.lr_scheduler,
         )
 
+
 class TransformerCTCModule(pl.LightningModule):
     NUM_BANDS: ClassVar[int] = 2
     ELECTRODE_CHANNELS: ClassVar[int] = 16
@@ -392,6 +393,8 @@ class TransformerCTCModule(pl.LightningModule):
             optimizer_config=self.hparams.optimizer,
             lr_scheduler_config=self.hparams.lr_scheduler,
         )
+
+
 class LSTMCTCModule(pl.LightningModule):
     NUM_BANDS: ClassVar[int] = 2
     ELECTRODE_CHANNELS: ClassVar[int] = 16
@@ -407,7 +410,7 @@ class LSTMCTCModule(pl.LightningModule):
         optimizer: DictConfig = None,
         lr_scheduler: DictConfig = None,
         decoder: DictConfig = None,
-        **kwargs,  
+        **kwargs,
     ) -> None:
         super().__init__()
         self.save_hyperparameters()
@@ -416,7 +419,6 @@ class LSTMCTCModule(pl.LightningModule):
         num_dirs = 2 if bidirectional else 1
         lstm_out = lstm_hidden * num_dirs
 
-        
         self.frontend = nn.Sequential(
             SpectrogramNorm(channels=self.NUM_BANDS * self.ELECTRODE_CHANNELS),
             MultiBandRotationInvariantMLP(
@@ -452,13 +454,15 @@ class LSTMCTCModule(pl.LightningModule):
         )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        x = self.frontend(inputs)    # (T, N, num_features)
-        x, _ = self.lstm(x)          # (T, N, lstm_out)
-        x = self.classifier(x)       # (T, N, num_classes)
+        x = self.frontend(inputs)  # (T, N, num_features)
+        x, _ = self.lstm(x)  # (T, N, lstm_out)
+        x = self.classifier(x)  # (T, N, num_classes)
         return x
 
-    def _step(self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs) -> torch.Tensor:
-        
+    def _step(
+        self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs
+    ) -> torch.Tensor:
+
         inputs = batch["inputs"]
         targets = batch["targets"]
         input_lengths = batch["input_lengths"]
@@ -518,6 +522,8 @@ class LSTMCTCModule(pl.LightningModule):
             optimizer_config=self.hparams.optimizer,
             lr_scheduler_config=self.hparams.lr_scheduler,
         )
+
+
 # ----------------------------
 # RNN
 # ----------------------------
@@ -582,7 +588,9 @@ class RNNCTCModule(pl.LightningModule):
         emissions = self.classifier(h_seq)
         return emissions
 
-    def _step(self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs) -> torch.Tensor:
+    def _step(
+        self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs
+    ) -> torch.Tensor:
         inputs = batch["inputs"]
         targets = batch["targets"]
         input_lengths = batch["input_lengths"]
@@ -645,6 +653,8 @@ class RNNCTCModule(pl.LightningModule):
             optimizer_config=self.hparams.optimizer,
             lr_scheduler_config=self.hparams.lr_scheduler,
         )
+
+
 # ----------------------------
 # Hybrid: TDSConvEncoder + BiLSTM + CTC
 # ----------------------------
@@ -719,13 +729,15 @@ class HybridTDSConvBiLSTMCTCModule(pl.LightningModule):
         )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        feats = self.front_end(inputs)      # (T, N, F)
-        enc = self.encoder(feats)           # (T', N, F)
-        h_seq, _ = self.rnn(enc)            # (T', N, 2H)
+        feats = self.front_end(inputs)  # (T, N, F)
+        enc = self.encoder(feats)  # (T', N, F)
+        h_seq, _ = self.rnn(enc)  # (T', N, 2H)
         emissions = self.classifier(h_seq)  # (T', N, C)
         return emissions
 
-    def _step(self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs) -> torch.Tensor:
+    def _step(
+        self, phase: str, batch: dict[str, torch.Tensor], *args, **kwargs
+    ) -> torch.Tensor:
         inputs = batch["inputs"]
         targets = batch["targets"]
         input_lengths = batch["input_lengths"]
@@ -739,10 +751,10 @@ class HybridTDSConvBiLSTMCTCModule(pl.LightningModule):
         emission_lengths = input_lengths - T_diff
 
         loss = self.ctc_loss(
-            log_probs=emissions,                 # (T', N, C)
-            targets=targets.transpose(0, 1),     # (T, N) -> (N, T)
-            input_lengths=emission_lengths,      # (N,)
-            target_lengths=target_lengths,       # (N,)
+            log_probs=emissions,  # (T', N, C)
+            targets=targets.transpose(0, 1),  # (T, N) -> (N, T)
+            input_lengths=emission_lengths,  # (N,)
+            target_lengths=target_lengths,  # (N,)
         )
 
         predictions = self.decoder.decode_batch(

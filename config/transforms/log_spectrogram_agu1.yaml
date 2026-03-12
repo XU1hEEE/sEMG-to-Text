@@ -8,21 +8,21 @@ channel_dropout:
   _target_: emg2qwerty.transforms.ForEach
   transform:
     _target_: emg2qwerty.transforms.ChannelDropout
-    dropout_prob: 0.1  
+    dropout_prob: 0.1
 
 
 amplitude_scaling:
   _target_: emg2qwerty.transforms.ForEach
   transform:
     _target_: emg2qwerty.transforms.AmplitudeScaling
-    min_scale: 0.9     
+    min_scale: 0.9
     max_scale: 1.1
 
 band_rotation:
   _target_: emg2qwerty.transforms.ForEach  # i.i.d rotation offset for each band
   transform:
     _target_: emg2qwerty.transforms.RandomBandRotation
-    offsets: [-1, 0, 1]  
+    offsets: [-1, 0, 1]
 
 temporal_jitter:
   _target_: emg2qwerty.transforms.TemporalAlignmentJitter
@@ -35,10 +35,10 @@ logspec:
 
 specaug:
   _target_: emg2qwerty.transforms.SpecAugment
-  n_time_masks: 2      
-  time_mask_param: 10  
-  n_freq_masks: 2      
-  freq_mask_param: 4   
+  n_time_masks: 2
+  time_mask_param: 10
+  n_freq_masks: 2
+  freq_mask_param: 4
 
 transforms:
   train:

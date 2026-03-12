@@ -173,9 +173,11 @@ class SpecAugment:
 # ==========================================
 # ==========================================
 
+
 @dataclass
 class AddGaussianNoise:
     """add white noise"""
+
     std: float = 0.05
 
     def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
@@ -186,9 +188,10 @@ class AddGaussianNoise:
 @dataclass
 class SynchronizedTimeMasking:
     """hide signals"""
+
     max_mask_len: int = 15
 
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor: 
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
         seq_len = tensor.shape[0]
         if seq_len <= self.max_mask_len:
             return tensor

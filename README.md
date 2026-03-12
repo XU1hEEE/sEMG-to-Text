@@ -84,4 +84,3 @@ python -m emg2qwerty.train user="single_user" trainer.accelerator=gpu trainer.de
 ```
 
 ---
-

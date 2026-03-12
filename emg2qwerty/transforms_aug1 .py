@@ -244,11 +244,13 @@ class SpecAugment:
         # (..., C, freq, T) -> (T, ..., C, freq)
         return x.movedim(-1, 0)
 
+
 @dataclass
 class ChannelDropout:
     """
     mild
     """
+
     dropout_prob: float = 0.1
     channel_dim: int = -1
 
@@ -258,21 +260,22 @@ class ChannelDropout:
 
         cloned_tensor = tensor.clone()
         num_channels = cloned_tensor.shape[self.channel_dim]
-        
-        
+
         drop_idx = np.random.choice(num_channels)
-        
+
         slices = [slice(None)] * cloned_tensor.ndim
         slices[self.channel_dim] = drop_idx
         cloned_tensor[tuple(slices)] = 0.0
-            
+
         return cloned_tensor
+
 
 @dataclass
 class AmplitudeScaling:
     """
     mild
     """
+
     min_scale: float = 0.9
     max_scale: float = 1.1
 
