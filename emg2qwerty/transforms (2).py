@@ -171,27 +171,24 @@ class SpecAugment:
 
 
 # ==========================================
-# 新增的 CNN-Friendly 数据增强策略
 # ==========================================
 
 @dataclass
 class AddGaussianNoise:
-    """向所有通道添加全局高斯白噪声，适合 CNN 架构。模拟传感器的底噪。"""
+    """add white noise"""
     std: float = 0.05
 
     def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        # tensor 形状为 (T, bands, channels)
         noise = torch.randn_like(tensor) * self.std
         return tensor + noise
 
 
 @dataclass
 class SynchronizedTimeMasking:
-    """在时间轴上同步遮挡所有通道的一小段信号，适合 CNN 架构。模拟瞬间连接断开。"""
+    """hide signals"""
     max_mask_len: int = 15
 
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        # tensor 形状为 (T, bands, channels)
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor: 
         seq_len = tensor.shape[0]
         if seq_len <= self.max_mask_len:
             return tensor
@@ -199,8 +196,6 @@ class SynchronizedTimeMasking:
         mask_len = torch.randint(1, int(self.max_mask_len) + 1, (1,)).item()
         mask_start = torch.randint(0, seq_len - mask_len, (1,)).item()
 
-        # 使用 clone 避免修改原始数据造成潜在冲突
         tensor = tensor.clone()
-        # 同一时间段内的所有频带、所有通道全部置零
         tensor[mask_start : mask_start + mask_len] = 0.0
         return tensor
