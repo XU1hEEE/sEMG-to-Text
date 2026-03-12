@@ -1,35 +1,57 @@
-@dataclass
-class ChannelDropout:
-    """
-    mild
-    """
-    dropout_prob: float = 0.1
-    channel_dim: int = -1
+# @package _global_
+to_tensor:
+  _target_: emg2qwerty.transforms.ToTensor
+  fields: [emg_left, emg_right]
 
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        if np.random.rand() > self.dropout_prob:
-            return tensor
 
-        cloned_tensor = tensor.clone()
-        num_channels = cloned_tensor.shape[self.channel_dim]
-        
-        
-        drop_idx = np.random.choice(num_channels)
-        
-        slices = [slice(None)] * cloned_tensor.ndim
-        slices[self.channel_dim] = drop_idx
-        cloned_tensor[tuple(slices)] = 0.0
-            
-        return cloned_tensor
+channel_dropout:
+  _target_: emg2qwerty.transforms.ForEach
+  transform:
+    _target_: emg2qwerty.transforms.ChannelDropout
+    dropout_prob: 0.1  
 
-@dataclass
-class AmplitudeScaling:
-    """
-    mild
-    """
-    min_scale: float = 0.9
-    max_scale: float = 1.1
 
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        scale = np.random.uniform(self.min_scale, self.max_scale)
-        return tensor * scale
+amplitude_scaling:
+  _target_: emg2qwerty.transforms.ForEach
+  transform:
+    _target_: emg2qwerty.transforms.AmplitudeScaling
+    min_scale: 0.9     
+    max_scale: 1.1
+
+band_rotation:
+  _target_: emg2qwerty.transforms.ForEach  # i.i.d rotation offset for each band
+  transform:
+    _target_: emg2qwerty.transforms.RandomBandRotation
+    offsets: [-1, 0, 1]  
+
+temporal_jitter:
+  _target_: emg2qwerty.transforms.TemporalAlignmentJitter
+  max_offset: 120  # Max 60ms jitter for 2kHz EMG
+
+logspec:
+  _target_: emg2qwerty.transforms.LogSpectrogram
+  n_fft: 64
+  hop_length: 16  # Downsamples from 2kHz to 125Hz
+
+specaug:
+  _target_: emg2qwerty.transforms.SpecAugment
+  n_time_masks: 2      
+  time_mask_param: 10  
+  n_freq_masks: 2      
+  freq_mask_param: 4   
+
+transforms:
+  train:
+    - ${to_tensor}
+    - ${channel_dropout}
+    - ${amplitude_scaling}
+    - ${band_rotation}
+    - ${temporal_jitter}
+    - ${logspec}
+    - ${specaug}
+
+  val:
+    - ${to_tensor}
+    - ${logspec}
+
+  test: ${transforms.val}
