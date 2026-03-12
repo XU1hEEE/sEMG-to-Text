@@ -1,0 +1,35 @@
+@dataclass
+class ChannelDropout:
+    """
+    温和版：最多只丢弃 1 个通道，且降低概率，避免丢失过多肌肉协同信息。
+    """
+    dropout_prob: float = 0.1
+    channel_dim: int = -1
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        if np.random.rand() > self.dropout_prob:
+            return tensor
+
+        cloned_tensor = tensor.clone()
+        num_channels = cloned_tensor.shape[self.channel_dim]
+        
+        
+        drop_idx = np.random.choice(num_channels)
+        
+        slices = [slice(None)] * cloned_tensor.ndim
+        slices[self.channel_dim] = drop_idx
+        cloned_tensor[tuple(slices)] = 0.0
+            
+        return cloned_tensor
+
+@dataclass
+class AmplitudeScaling:
+    """
+    温和版：缩小振幅扰动范围。
+    """
+    min_scale: float = 0.9
+    max_scale: float = 1.1
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        scale = np.random.uniform(self.min_scale, self.max_scale)
+        return tensor * scale
