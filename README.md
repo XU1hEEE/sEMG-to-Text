@@ -1,6 +1,7 @@
 # Decoding Keystrokes from sEMG Signals
 
 **C147/247 Final Project – Winter 2026**
+
 **Team:** Yihe Xu, Zijing Zhu, Xiang Zhou, Chi En Chen
 
 ## Overview
