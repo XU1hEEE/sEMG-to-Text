@@ -200,5 +200,5 @@ class SynchronizedTimeMasking:
         mask_start = torch.randint(0, seq_len - mask_len, (1,)).item()
 
         tensor = tensor.clone()
-        tensor[mask_start: mask_start + mask_len] = 0.0
+        tensor[slice(mask_start, mask_start + mask_len)] = 0.0
         return tensor
