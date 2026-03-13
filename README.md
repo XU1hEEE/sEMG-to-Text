@@ -82,5 +82,5 @@ Train the personalized user model:
 ```bash
 python -m emg2qwerty.train user="single_user" trainer.accelerator=gpu trainer.devices=1
 ```
-
+CI trigger
 ---
