@@ -32,16 +32,38 @@ Built on Meta's **emg2qwerty** dataset and codebase, we evaluate several neural 
 
 ---
 
-## Repository Structure
 
-```
-emg2qwerty/
-├── lightning.py          # Training pipeline
-├── modules.py            # Model implementations
-├── config/               # Experiment configurations
-│   ├── model/
-│   └── user/
-└── data/                 # Dataset symlink
+## Repository layout
+
+```text
+.
+├── .github/workflows/         # CI and test workflow
+├── Archive/                   # Archived notes / placeholders
+├── config/                    # Hydra experiment configs
+│   ├── cluster/               # Local / slurm launch presets
+│   ├── decoder/               # Greedy / beam CTC decoding configs
+│   ├── lr_scheduler/          # Scheduler presets
+│   ├── model/                 # Model definitions and ablations
+│   ├── optimizer/             # Optimizer presets
+│   ├── transforms/            # Feature transform presets
+│   └── user/                  # Train/val/test session lists
+├── emg2qwerty/                # Core package
+│   ├── data.py                # HDF5 dataset and collation
+│   ├── decoder.py             # CTC decoders
+│   ├── lightning.py           # Lightning modules + datamodule
+│   ├── metrics.py             # CER metrics
+│   ├── modules.py             # Neural model components
+│   ├── train.py               # Main training entry point
+│   ├── train_downsample.py    # Downsampled training variant
+│   ├── transforms*.py         # Feature transforms and augmentations
+│   └── tests/                 # Unit tests
+├── models/lm/                 # Language-model placeholders
+├── scripts/                   # Utility scripts
+├── *.ipynb                    # Research notebooks / experiments
+├── environment.yml            # Conda environment
+├── requirements.txt           # Pip requirements
+├── setup.py                   # Package install metadata
+└── README.md
 ```
 
 Key configuration files:
@@ -82,3 +104,6 @@ python -m emg2qwerty.train user="single_user" trainer.accelerator=gpu trainer.de
 ```
 
 ---
+
+
+
